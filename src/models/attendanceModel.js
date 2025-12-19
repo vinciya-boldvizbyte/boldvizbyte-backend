@@ -3,25 +3,33 @@ import mongoose from "mongoose";
 
 const attendanceSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  date: { type: Date, required: true },
-  status: { type: String, default: "present" }, // present / absent / leave
-  notes: { type: String, default: "" },
+  date: { type: String, required: true }, // store as YYYY-MM-DD
+  status: { type: String, enum: ["Present", "Absent", "--"], default: "--" },
+  login: { type: String, default: "--" },
+  logout: { type: String, default: "--" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
+});
+
+// Middleware to update updatedAt on every save
+attendanceSchema.pre("save", function (next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 const Attendance = mongoose.model("Attendance", attendanceSchema);
 
 // --------------------------
-// Functions (MongoDB versions)
+// Functions for controller
 // --------------------------
 
-export async function createAttendance({ userId, date, status, notes }) {
+export async function createAttendance({ userId, date, status, login, logout }) {
   const record = await Attendance.create({
     userId,
     date,
-    status: status || "present",
-    notes: notes || ""
+    status: status || "--",
+    login: login || "--",
+    logout: logout || "--"
   });
   return record.toObject();
 }
